@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Razorpay — Revenue Unlock</title>
+<style>
+  :root{--bg:#0f1115;--panel:#fff;--ink:#1a1a2e;--muted:#6b7280;--accent:#3b4cca;--green:#16a34a;--amber:#d97706;--red:#dc2626;--border:#e5e7eb;}
+  *{box-sizing:border-box;font-family:-apple-system,Segoe UI,Roboto,sans-serif;}
+  body{margin:0;background:#f4f5f7;color:var(--ink);}
+  .topbar{background:var(--bg);color:#fff;display:flex;align-items:center;gap:24px;padding:10px 20px;font-size:14px;}
+  .topbar .logo{font-weight:700;color:#fff;}
+  .topbar .nav{display:flex;gap:18px;color:#c7c9d9;}
+  .topbar .nav span.active{color:#fff;font-weight:600;}
+  .bell{margin-left:auto;position:relative;cursor:pointer;}
+  .bell .badge{position:absolute;top:-6px;right:-10px;background:var(--red);color:#fff;border-radius:50%;font-size:11px;padding:1px 5px;transition:opacity .2s;}
+  .wrap{display:flex;max-width:1440px;margin:0 auto;}
+  .main{flex:1 1 560px;padding:20px;}
+  .cards{display:flex;gap:16px;margin-bottom:20px;}
+  .stat{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px 18px;min-width:150px;}
+  .stat .label{font-size:12px;color:var(--muted);}
+  .stat .val{font-size:22px;font-weight:700;}
+  table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+  th,td{padding:8px 12px;text-align:left;font-size:13px;border-bottom:1px solid var(--border);}
+  th{color:var(--muted);font-weight:600;background:#fafafa;}
+  .status-ok{color:var(--green);font-weight:600;}
+  .status-fail{color:var(--red);font-weight:600;}
+  .row-highlight{animation:rowpulse 3.6s ease;}
+  @keyframes rowpulse{0%{background:#ffe08a;}15%{background:#fff4cc;}30%{background:#ffe08a;}45%{background:#fff4cc;}100%{background:transparent;}}
+  .reason{color:var(--muted);font-size:12px;}
+  .toast{position:fixed;top:16px;right:16px;background:#fff;border:1px solid var(--border);box-shadow:0 8px 24px rgba(0,0,0,.12);border-radius:10px;padding:14px 16px;width:340px;animation:slide .35s ease;z-index:50;}
+  @keyframes slide{from{transform:translateX(30px);opacity:0}to{transform:translateX(0);opacity:1}}
+  @keyframes popin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  .toast b{display:block;margin-bottom:6px;}
+  .toast .btns{margin-top:10px;display:flex;gap:8px;}
+  .btn{border:none;border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;}
+  .btn-primary{background:var(--accent);color:#fff;}
+  .btn-ghost{background:#eee;color:var(--ink);}
+  .ray-panel{width:560px;background:var(--panel);border-left:1px solid var(--border);padding:18px;min-height:100vh;}
+  .msg-bubble{background:#eef1ff;border:1px solid #d6dbff;border-radius:10px;padding:10px 12px;font-size:13px;color:var(--ink);margin-top:8px;max-width:360px;opacity:0;transform:translateY(6px);animation:bubblein .35s ease forwards;}
+  @keyframes bubblein{to{opacity:1;transform:translateY(0);}}
+  .send-status{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin-top:6px;}
+  .send-dots span{animation:dotpulse 1s infinite;opacity:.3;}
+  .send-dots span:nth-child(2){animation-delay:.2s;}
+  .send-dots span:nth-child(3){animation-delay:.4s;}
+  @keyframes dotpulse{0%,100%{opacity:.3;}50%{opacity:1;}}
+  .pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;margin-bottom:8px;}
+  .pill-know{background:#fee2e2;color:var(--red);}
+  .pill-suspect{background:#fef3c7;color:var(--amber);}
+  .pill-live{background:#dcfce7;color:var(--green);}
+  .alert-card{border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px;animation:popin .35s ease;}
+  .alert-card h3{margin:4px 0;font-size:15px;}
+  .alert-card .reason{margin-bottom:8px;}
+  .nums{display:flex;gap:14px;font-size:12px;margin:10px 0;}
+  .nums div b{display:block;font-size:15px;}
+  .peer{background:#f3f4f6;border-radius:8px;padding:8px 10px;font-size:12px;color:var(--muted);margin:10px 0;}
+  .link{color:var(--accent);font-size:12px;cursor:pointer;text-decoration:underline;}
+  .evidence-table{margin-top:8px;font-size:11px;}
+  .btnrow{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+  .hidden{display:none !important;}
+  .reset-btn{position:fixed;bottom:16px;left:16px;background:#111;color:#fff;border:1px solid #444;border-radius:8px;padding:8px 14px;font-size:12px;cursor:pointer;z-index:60;}
+  .reset-btn:hover{background:#222;}
+  .typing{display:flex;gap:4px;align-items:center;color:var(--muted);font-size:12px;padding:6px 0;}
+  .dot{width:5px;height:5px;background:var(--muted);border-radius:50%;animation:blink 1.2s infinite ease-in-out;}
+  .dot:nth-child(2){animation-delay:.2s;} .dot:nth-child(3){animation-delay:.4s;}
+  @keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+  footer{position:fixed;bottom:4px;right:10px;font-size:11px;color:var(--muted);}
+  .chase-row{display:flex;flex-direction:column;align-items:stretch;border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:8px;font-size:12px;}
+  .chase-row .meta{color:var(--muted);}
+  .chase-row .acts{margin-top:8px;display:flex;gap:8px;}
+  .chase-row .acts button{margin-left:0;}
+  .results{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px;font-size:12px;margin-top:10px;animation:popin .35s ease;}
+  .settings-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;}
+  .settings-row span.val{transition:color .2s;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="logo">Razorpay</span>
+  <div class="nav"><span class="active">Home</span><span>Ray AI (beta)</span><span>Payments</span><span>Settings</span></div>
+  <div class="bell" id="bellIcon">🔔<span class="badge hidden" id="bellBadge">1</span></div>
+</div>
+
+<div class="wrap">
+  <div class="main">
+    <div class="cards">
+      <div class="stat"><div class="label">Today's collection</div><div class="val">₹18,420</div></div>
+      <div class="stat"><div class="label">Payments today</div><div class="val">14</div></div>
+      <div class="stat"><div class="label">Success rate</div><div class="val">86%</div></div>
+    </div>
+    <h3>Recent payments</h3>
+    <table id="paymentsTable">
+      <thead><tr><th>Time</th><th>Customer</th><th>Method</th><th>Amount</th><th>Status</th></tr></thead>
+      <tbody id="paymentsBody">
+        <tr><td>10:02 AM</td><td>R. Mehta</td><td>UPI</td><td>₹1,200</td><td class="status-ok">Success</td></tr>
+        <tr><td>10:11 AM</td><td>S. Nair</td><td>Netbanking</td><td>₹2,800</td><td class="status-ok">Success</td></tr>
+        <tr><td>10:18 AM</td><td>A. Khan</td><td>Card</td><td>₹900</td><td class="status-ok">Success</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="margin-top:24px;">Settings → Payment methods</h3>
+    <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;">
+      <div class="settings-row"><span>UPI, domestic cards, netbanking</span><span class="status-ok">On</span></div>
+      <div class="settings-row" id="row-intl-setting"><span>International cards</span><span class="val" id="intlStatus">Off</span></div>
+      <div class="settings-row"><span>EMI</span><span class="val" id="emiStatus">Off</span></div>
+      <div class="settings-row"><span>Pay later</span><span>Off</span></div>
+    </div>
+  </div>
+
+  <div class="ray-panel" id="rayPanel">
+    <h3>Ray AI</h3>
+    <div id="rayFeed">
+      <p style="color:var(--muted);font-size:13px;">Watching your payments…</p>
+    </div>
+  </div>
+</div>
+
+<div id="toastArea"></div>
+<button class="reset-btn" onclick="resetDemo()">↺ Reset demo</button>
+<footer>Concept prototype · synthetic data · scores scripted</footer>
+
+<script>
+// ---------- Seamless autoplay story ----------
+// Real decision points stay manual clicks (See why / Start activation / Send / Skip / Try EMI).
+// Everything else (detection, backend confirmation, result tally) happens on its own, like a live system.
+
+function toast(title, body, actions, autoRemoveMs){
+  const area = document.getElementById('toastArea');
+  const id = 't'+Date.now()+Math.random();
+  const btns = (actions||[]).map(a=>`<button class="btn ${a.primary?'btn-primary':'btn-ghost'}" onclick="${a.onclick}">${a.label}</button>`).join('');
+  area.insertAdjacentHTML('beforeend', `<div class="toast" id="${id}"><b>${title}</b>${body}<div class="btns">${btns}</div></div>`);
+  setTimeout(()=>{const el=document.getElementById(id); if(el) el.scrollIntoView({behavior:'smooth', block:'center'});}, 50);
+  if(autoRemoveMs !== false){
+    setTimeout(()=>{const el=document.getElementById(id); if(el) el.remove();}, autoRemoveMs || 12000);
+  }
+  return id;
+}
+function scrollFeedToNew(){
+  const feed = document.getElementById('rayFeed');
+  if(!feed) return;
+  const last = feed.lastElementChild;
+  if(last) setTimeout(()=>last.scrollIntoView({behavior:'smooth', block:'center'}), 50);
+}
+function typingIndicator(show){
+  const feed = document.getElementById('rayFeed');
+  let t = document.getElementById('typingRow');
+  if(show){
+    if(!t){ feed.insertAdjacentHTML('beforeend', `<div class="typing" id="typingRow"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`); }
+  } else if(t){ t.remove(); }
+}
+
+// Step 0 — page opens on a normal morning. After a believable beat (so viewers register real time passing), a failed payment happens live.
+if('scrollRestoration' in history) history.scrollRestoration = 'manual';
+window.scrollTo(0,0);
+window.addEventListener('load', ()=>{
+  window.scrollTo(0,0);
+  setTimeout(simulateAbroad, 2200);
+});
+
+function simulateAbroad(){
+  const row = document.createElement('tr');
+  row.id = 'row-intl';
+  row.innerHTML = `<td>10:24 AM</td><td>Visa · UAE</td><td>Int'l Card</td><td>₹3,500</td><td class="status-fail">Failed</td>`;
+  document.getElementById('paymentsBody').prepend(row);
+  document.getElementById('bellBadge').classList.remove('hidden');
+  toast("Revenue Unlock", "A customer from the UAE couldn't pay you ₹3,500, because of a setting.",
+    [{label:'See why', onclick:'showAlertCard()', primary:true},{label:'Dismiss', onclick:"this.closest('.toast').remove()"}], false);
+}
+
+function highlightRow(id){
+  const row = document.getElementById(id);
+  if(!row) return;
+  row.scrollIntoView({behavior:'smooth', block:'center'});
+  row.classList.add('row-highlight');
+  setTimeout(()=>row.classList.remove('row-highlight'), 3600);
+}
+
+function showAlertCard(){
+  document.querySelectorAll('.toast').forEach(t=>t.remove());
+  highlightRow('row-intl');
+  const feed = document.getElementById('rayFeed');
+  const watching = feed.querySelector('p');
+  if(watching) watching.remove();
+  feed.insertAdjacentHTML('beforeend', `
+  <div class="alert-card" id="intlCard">
+    <span class="pill pill-know">I KNOW</span>
+    <h3>A customer from the UAE just couldn't pay you ₹3,500</h3>
+    <div class="reason">International cards are turned off on your account (not a customer error).</div>
+    <div class="nums">
+      <div><b>4</b>blocked attempts</div>
+      <div><b>₹12,800</b>tried to pay</div>
+      <div><b>3</b>countries</div>
+    </div>
+    <div class="reason">Cost: ~3% fee on international cards (vs 2% domestic). Fraud checks stay on.</div>
+    <span class="link" onclick="toggleEvidence()">How do you know? ▾</span>
+    <table class="evidence-table hidden" id="evidenceTable">
+      <thead><tr><th>Date</th><th>Country</th><th>Network</th><th>Amount</th></tr></thead>
+      <tbody>
+        <tr><td>Oct 11</td><td>UAE</td><td>Visa</td><td>₹3,500</td></tr>
+        <tr><td>Oct 10</td><td>US</td><td>Mastercard</td><td>₹5,200</td></tr>
+        <tr><td>Oct 9</td><td>UK</td><td>Visa</td><td>₹2,100</td></tr>
+        <tr><td>Oct 8</td><td>UAE</td><td>Amex</td><td>₹2,000</td></tr>
+      </tbody>
+    </table>
+    <div class="btnrow">
+      <button class="btn btn-primary" onclick="startActivation()">Review draft &amp; start activation</button>
+      <button class="btn btn-ghost" onclick="remindLater()">Remind me later</button>
+      <button class="btn btn-ghost" onclick="dontWantIntl()">I don't want international customers</button>
+    </div>
+  </div>`);
+  scrollFeedToNew();
+}
+
+function toggleEvidence(){ document.getElementById('evidenceTable').classList.toggle('hidden'); }
+
+// Step 1 — merchant approves the fix. Backend "confirms" live on its own after a beat — no manual demo button.
+function startActivation(){
+  document.getElementById('intlStatus').innerHTML = '<span style="color:var(--amber);">Activation pending</span>';
+  highlightRow('row-intl-setting');
+  const card = document.getElementById('intlCard');
+  card.querySelector('.btnrow').innerHTML = `<span class="reason">Activation request sent. Razorpay is reviewing it with its banking partners…</span>`;
+  typingIndicator(true);
+  setTimeout(markLive, 3200);
+}
+function offerGrowthSuggestion(){
+  setTimeout(()=>{
+    toast("Revenue Unlock", "Want me to show you where else you could grow your business?",
+      [{label:'Show me', onclick:"showWeekly(); this.closest('.toast').remove();", primary:true},{label:'Not now', onclick:"this.closest('.toast').remove()"}], false);
+  }, 2200);
+}
+function remindLater(){
+  document.getElementById('intlCard').innerHTML = `<div class="reason">OK, I'll bring this up in Monday's weekly review.</div>`;
+  offerGrowthSuggestion();
+}
+function dontWantIntl(){
+  document.getElementById('intlCard').innerHTML = `<div class="reason">Got it. I won't raise this again. You can change it in Settings.</div>`;
+  document.getElementById('intlStatus').textContent = 'Muted';
+  offerGrowthSuggestion();
+}
+
+// Step 2 — the setting goes live by itself (as if the bank/partner confirmed it), and Ray immediately proposes the chase.
+function markLive(){
+  typingIndicator(false);
+  document.getElementById('intlStatus').innerHTML = '<span class="status-ok">On</span>';
+  highlightRow('row-intl-setting');
+  setTimeout(()=>{
+    toast("Revenue Unlock", "International cards just went live. 4 earlier customers can now pay — want me to tell them?",
+      [{label:'Show me', onclick:'showChaseCard()', primary:true}], false);
+  }, 1800);
+}
+
+function showChaseCard(){
+  document.querySelectorAll('.toast').forEach(t=>t.remove());
+  highlightRow('row-intl');
+  highlightRow('row-intl-setting');
+  const feed = document.getElementById('rayFeed');
+  feed.insertAdjacentHTML('beforeend', `
+  <div class="alert-card" id="chaseCard">
+    <span class="pill pill-live">LIVE</span>
+    <h3>International cards are now live. 4 customers from earlier attempts can still pay.</h3>
+    <div class="reason">AI suggests: 3 CHASE, 1 SKIP — you approve each one.</div>
+    <div class="chase-row">
+      <div><b>UAE · Visa · ₹3,500</b><div class="meta">Repeat buyer, blocked 6h ago, no other payment seen. CHASE.</div></div>
+      <div class="acts"><button class="btn btn-primary" onclick="sendChase(this)">Send</button><button class="btn btn-ghost" onclick="skipChase(this)">Skip</button></div>
+    </div>
+    <div class="chase-row">
+      <div><b>US · Mastercard · ₹5,200</b><div class="meta">High value, single attempt, opted in. CHASE.</div></div>
+      <div class="acts"><button class="btn btn-primary" onclick="sendChase(this)">Send</button><button class="btn btn-ghost" onclick="skipChase(this)">Skip</button></div>
+    </div>
+    <div class="chase-row">
+      <div><b>UK · Visa · ₹2,100</b><div class="meta">Already paid ₹1,200 on a different card 2h after block. SKIP.</div></div>
+      <div class="acts"><span class="meta">Auto-skipped: already paid</span></div>
+    </div>
+    <div class="chase-row">
+      <div><b>UAE · Amex · ₹2,000</b><div class="meta">Low confidence, no repeat history. AI suggests SKIP.</div></div>
+      <div class="acts"><button class="btn btn-primary" onclick="sendChase(this)">Send</button><button class="btn btn-ghost" onclick="skipChase(this)">Skip</button></div>
+    </div>
+    <div id="fastForwardResults"></div>
+  </div>`);
+  scrollFeedToNew();
+}
+
+let decided = 0;
+function checkAllDecided(){
+  const card = document.getElementById('chaseCard');
+  const open = card.querySelectorAll('.chase-row .btn-primary, .chase-row .btn-ghost:not([disabled])').length;
+  if(open === 0){
+    // all real decisions made — the result tally appears on its own, like a live system, not a demo button
+    setTimeout(fastForward, 2600);
+  }
+}
+function sendChase(btn){
+  const row = btn.closest('.chase-row');
+  const nameLine = row.querySelector('b').textContent;
+  const amountMatch = nameLine.match(/₹[\d,]+/);
+  const amount = amountMatch ? amountMatch[0] : '';
+  const acts = row.querySelector('.acts');
+  acts.innerHTML = '<div class="send-status"><span class="send-dots"><span>●</span><span>●</span><span>●</span></span> Sending…</div>';
+  setTimeout(()=>{
+    acts.innerHTML = `<div class="msg-bubble">💬 "Good news — international cards are back on. You can complete your ${amount} payment now: pay.razorpay.me/xxxx"</div>
+    <div class="send-status" style="margin-top:4px;">✅ Delivered via WhatsApp</div>`;
+  }, 900);
+  setTimeout(()=>{
+    acts.innerHTML = '<span class="status-ok">Sent</span>';
+  }, 2600);
+  setTimeout(()=>{
+    checkAllDecided();
+  }, 1300);
+}
+function skipChase(btn){
+  const row = btn.closest('.chase-row');
+  row.querySelector('.acts').innerHTML = '<span class="meta">Skipped. Reason logged.</span>';
+  checkAllDecided();
+}
+
+function fastForward(){
+  const card = document.getElementById('chaseCard');
+  if(!card) return;
+  document.getElementById('fastForwardResults').innerHTML = `
+  <div class="results">
+    <b>72 hours later:</b><br>
+    Sent 2 · Paid 1 (₹3,500) · 1 still pending.<br>
+    Holdout (no message, 1 customer): 0 paid.<br>
+    Incremental recovered revenue: ₹3,500 from this batch.
+  </div>`;
+  setTimeout(()=>{
+    const el = document.getElementById('fastForwardResults');
+    if(el) el.scrollIntoView({behavior:'smooth', block:'center'});
+  }, 50);
+  setTimeout(()=>{
+    toast("Revenue Unlock", "Want me to show you where else you could grow your business?",
+      [{label:'Show me', onclick:"showWeekly(); this.closest('.toast').remove();", primary:true},{label:'Not now', onclick:"this.closest('.toast').remove()"}], false);
+  }, 2600);
+}
+
+// Step 3 — the weekly review surfaces on its own after the first story beat finishes.
+let weeklyShown = false;
+function showWeekly(){
+  if(weeklyShown) return;
+  weeklyShown = true;
+  const feed = document.getElementById('rayFeed');
+  feed.insertAdjacentHTML('beforeend', `
+  <div class="alert-card">
+    <span class="pill pill-suspect">I SUSPECT</span>
+    <h3>Turning on EMI could win back some high-value customers.</h3>
+    <div class="reason">23 customers reached payment on orders above ₹5,000 and left. 14 had entered an EMI-eligible card first.</div>
+    <div class="peer">Similar services businesses get 9–14% of sales through EMI. You get 0%. <i>(synthetic peer data, 46 similar merchants)</i></div>
+    <div class="reason">Estimate: ₹25,000–40,000 more a month. I'll measure the real result.</div>
+    <div class="btnrow">
+      <button class="btn btn-primary" onclick="tryEmi()">Try EMI for 30 days</button>
+      <button class="btn btn-ghost" onclick="this.closest('.alert-card').querySelector('.btnrow').innerHTML='<span class=\\'reason\\'>Noted. I\\'ll ask again next week.</span>'">Not now</button>
+    </div>
+  </div>`);
+  scrollFeedToNew();
+}
+function tryEmi(){
+  document.getElementById('emiStatus').innerHTML = '<span style="color:var(--amber);">On (trial)</span>';
+  event.target.closest('.btnrow').innerHTML = '<span class="reason">EMI trial started. I\'ll track results for 30 days.</span>';
+}
+
+function resetDemo(){
+  if('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  window.scrollTo(0,0);
+  location.reload();
+}
+</script>
+</body>
+</html>
